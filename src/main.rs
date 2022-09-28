@@ -10,8 +10,6 @@ extern crate dotenv_codegen;
 const DISCORD_TOKEN: &str = dotenv!("DISCORD_TOKEN");
 // If you want to have commands specific to only a specific guild, set this as your guild_id.
 const PRIVATEGUILDID: serenity::GuildId = serenity::GuildId(703332075914264606);
-// Error channel, instead of logging the terminal and booting into the server, it logs errors to a private Discord.
-const DISCORD_CHANNEL_ERROR: serenity::ChannelId = serenity::ChannelId(703332075914264609);
 
 async fn on_ready(
     ctx: &serenity::Context,
@@ -58,20 +56,6 @@ async fn on_ready(
     Ok(())
 }
 
-async fn on_error(
-    error: poise::FrameworkError<'_, (), serenity::Error>,
-) -> Result<(), serenity::Error> {
-    match error {
-        poise::FrameworkError::Command { ctx, error } => {
-            DISCORD_CHANNEL_ERROR
-                .say(ctx.discord(), format!("Error line 57 \n {:?}", error))
-                .await?;
-        }
-        error => poise::builtins::on_error(error).await?,
-    }
-    Ok(())
-}
-
 #[allow(unused_doc_comments)]
 #[tokio::main]
 async fn main() {
@@ -81,13 +65,6 @@ async fn main() {
         .intents(serenity::GatewayIntents::empty())
         .options(poise::FrameworkOptions {
             commands: vec![commands::priceinfo::info_coin()],
-            on_error: |error| {
-                Box::pin(async move {
-                    if let Err(_why1) = on_error(error).await {
-                        //not error handling this deep but if you want to you can add a println!("{:?}, _why1"); here, note that if you detach the terminal this might become funky.
-                    }
-                })
-            },
             ..Default::default()
         })
         .user_data_setup(|ctx, ready, framework| Box::pin(on_ready(ctx, ready, framework)))
