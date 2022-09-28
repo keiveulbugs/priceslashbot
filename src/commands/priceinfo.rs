@@ -1,9 +1,3 @@
-use serenity::builder::CreateApplicationCommand;
-use serenity::model::prelude::command::CommandOptionType;
-use serenity::model::prelude::interaction::application_command::{
-    CommandDataOption, CommandDataOptionValue,
-};
-
 use serde_json::json;
 
 use serde_derive::Deserialize;
@@ -44,15 +38,39 @@ pub struct Change {
     pub m5: f64,
 }
 
-pub async fn run(options: &[CommandDataOption]) -> String {
-    let info = options.get(0).unwrap().resolved.as_ref().unwrap();
-    let info2 = options.get(1).unwrap().resolved.as_ref().unwrap();
-    let info3 = options.get(2).unwrap().resolved.as_ref().unwrap();
+#[derive(poise::ChoiceParameter)]
+#[allow(non_camel_case_types)]
+pub enum Chain {
+    ethereum,
+    #[name = "binance_smart_chain"]
+    bsc,
+    polygon,
+    avalanche,
+    fantom,
+    harmony,
+    cronos,
+    aurora,
+    moonriver,
+    moonbeam,
+    metis,
+    arbitrum,
+    optimism,
+    dogechain,
+    heco,
+    astar,
+    evmos,
+    xdai,
+}
 
-    if let CommandDataOptionValue::String(chain) = info {
-        if let CommandDataOptionValue::String(address) = info2 {
-            if let CommandDataOptionValue::Boolean(invert) = info3 {
-                if let Ok(responses) = reqwest::get(format!(
+/// Get info on a coin by entering their symbol
+#[poise::command(slash_command)]
+pub async fn info_coin(
+    ctx: poise::Context<'_, (), serenity::Error>,
+    #[description = "Select a chain"] chain: Chain,
+    #[description = "Enter a symbol, or choose a default one!"] address: String,
+    #[description = "turn this on if you want to invert the pair"] invert: bool,
+) -> Result<(), serenity::Error> {
+                let response = if let Ok(responses) = reqwest::get(format!(
                     "https://api.dexscreener.com/latest/dex/pairs/{}/{}",
                     chain, address
                 ))
@@ -62,7 +80,7 @@ pub async fn run(options: &[CommandDataOption]) -> String {
                     if status == "200 OK" {
                         if let Ok(v) = responses.json::<L1>().await {
                             let w = v.pairs;
-                            if *invert {
+                            if invert {
                                 let price0 = w[0].price_native.parse::<f64>().unwrap();
                                 let usd0 = w[0].price_usd.parse::<f64>().unwrap();
                                 let usd1 = usd0 / price0;
@@ -87,60 +105,8 @@ pub async fn run(options: &[CommandDataOption]) -> String {
                     }
                 } else {
                     "The dexscreener api can not be reached".to_string()
-                }
-            } else {
-                "parsing boolean error".to_string()
-            }
-        } else {
-            "parsing address error".to_string()
-        }
-    } else {
-        "parsing chain error".to_string()
-    }
-}
+                };
 
-pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command
-        .name("info_coin")
-        .description("Get info on a coin by entering their symbol")
-      //Ideally these would be suggested options but non mandatory.
-        .create_option(|option| {
-            option
-                .name("chain")
-                .description("Select a chain")
-                .kind(CommandOptionType::String)
-                .required(true)
-                .add_string_choice("ethereum", "ethereum")
-                .add_string_choice("binance_smart_chain", "bsc")
-                .add_string_choice("polygon", "polygon")
-                .add_string_choice("avalanche", "avalanche")
-                .add_string_choice("fantom", "fantom")
-                .add_string_choice("harmony", "harmony")
-                .add_string_choice("cronos", "cronos")
-                .add_string_choice("osmosis", "aurora")
-                .add_string_choice("moonriver", "moonriver")
-                .add_string_choice("moonbeam", "moonbeam")
-                .add_string_choice("metis", "metis")
-                .add_string_choice("arbitrum", "arbitrum")
-                .add_string_choice("optimism", "optimism")
-                .add_string_choice("dogechain", "dogechain")
-                .add_string_choice("heco", "heco")
-                .add_string_choice("astar", "astar")
-                .add_string_choice("evmos", "evmos")
-                .add_string_choice("xdai", "xdai")
-        })
-        .create_option(|option| {
-            option
-                .name("address")
-                .description("Enter a symbol, or choose a default one!")
-                .kind(CommandOptionType::String)
-                .required(true)
-        })
-        .create_option(|option| {
-            option
-                .name("invert")
-                .description("turn this on if you want to invert the pair")
-                .kind(CommandOptionType::Boolean)
-                .required(true) //setting this to false and giving it a default crashes for some reason, probably doing something wrong
-        })
+    ctx.say(response).await?;
+    Ok(())
 }
