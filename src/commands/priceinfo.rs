@@ -1,3 +1,4 @@
+use crate::Error;
 use serde_derive::Deserialize;
 //use serde_derive::Serialize;
 use serde_json::Value;
@@ -63,11 +64,11 @@ pub enum Chain {
 /// Get info on a coin by entering their symbol
 #[poise::command(slash_command)]
 pub async fn info_coin(
-    ctx: poise::Context<'_, (), serenity::Error>,
+    ctx: poise::Context<'_, (), Error>,
     #[description = "Select a chain"] chain: Chain,
     #[description = "Enter a symbol, or choose a default one!"] address: String,
     #[description = "turn this on if you want to invert the pair"] invert: bool,
-) -> Result<(), serenity::Error> {
+) -> Result<(), Error> {
     let response = if let Ok(responses) = reqwest::get(format!(
         "https://api.dexscreener.com/latest/dex/pairs/{}/{}",
         chain, address

@@ -1,5 +1,6 @@
 mod commands;
 use poise::serenity_prelude as serenity;
+type Error = Box<dyn std::error::Error + Send + Sync>;
 
 #[macro_use]
 //.env variables
@@ -14,8 +15,8 @@ const PRIVATEGUILDID: serenity::GuildId = serenity::GuildId(703332075914264606);
 async fn on_ready(
     ctx: &serenity::Context,
     ready: &serenity::Ready,
-    framework: &poise::Framework<(), serenity::Error>,
-) -> Result<(), serenity::Error> {
+    framework: &poise::Framework<(), Error>,
+) -> Result<(), Error> {
     // To announce that the bot is online.
     println!("{} is connected!", ready.user.name);
 
