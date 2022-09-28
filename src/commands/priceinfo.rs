@@ -9,24 +9,18 @@ pub struct L1 {
     pub pairs: Vec<L2>,
 }
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct L2 {
-    #[serde(rename = "chainId")]
     pub chain_id: String,
-    #[serde(rename = "dexId")]
     pub dex_id: String,
     pub url: String,
-    #[serde(rename = "pairAddress")]
     pub pair_address: String,
-    #[serde(rename = "priceNative")]
     pub price_native: String,
-    #[serde(rename = "priceUsd")]
     pub price_usd: String,
-    #[serde(rename = "priceChange")]
     pub price_change: Change,
     pub liquidity: Value,
     pub volume: Value,
-    #[serde(rename = "baseToken")]
-    pub basetoken: Value,
+    pub base_token: Value,
     //pub fdv: f64,
 }
 #[derive(Default, Debug, Clone, PartialEq, Deserialize)]
